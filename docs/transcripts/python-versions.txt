@@ -1,22 +1,17 @@
-# The same suite, against the same requirements.txt, on three Python versions.
-# The previous dependency set could not import at all on 3.12 or newer:
-#   intuit-oauth 1.2.4 -> future -> `import imp`  (removed in Python 3.12)
+# The same suite and requirements.txt on three Pythons. Each run is a fresh
+# python:<version>-slim container that follows the README's venv steps
+# (venv, pip install, cp .env.example .env, migrate, runserver, GET /healthz)
+# and then runs the tests. The two skips are the tracked-file secret scans,
+# which need git and the slim images do not ship it.
 
-$ python3.11.16 manage.py test
-Ran 131 tests in 0.072s
+$ python3.11.18 manage.py test
+Ran 139 tests in 0.046s
+OK (skipped=2)
 
-OK
-Destroying test database for alias 'default'...
+$ python3.12.16 manage.py test
+Ran 139 tests in 0.046s
+OK (skipped=2)
 
-$ python3.12.6 manage.py test
-Ran 131 tests in 0.069s
-
-OK
-Destroying test database for alias 'default'...
-
-$ python3.13.7 manage.py test
-Ran 131 tests in 0.066s
-
-OK
-Destroying test database for alias 'default'...
-
+$ python3.13.18 manage.py test
+Ran 139 tests in 0.050s
+OK (skipped=2)

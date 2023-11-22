@@ -1,6 +1,8 @@
-Captured 2026-09-25 19:21 UTC against the service running on 127.0.0.1:8870,
-with docs/local_provider_stub.py on 127.0.0.1:8871 standing in for the QuickBooks
-Online API. The session cookie is redacted; every other byte is verbatim.
+Captured 2026-11-08 from the p2 sandbox: the service image (gunicorn, DEBUG on)
+with docs/local_provider_stub.py running beside it on 127.0.0.1:8871 in place of
+the QuickBooks Online API. The session cookie and the OAuth state are redacted;
+every other byte is as returned. JSON bodies longer than a line are piped
+through `python -m json.tool --indent 4`.
 
   BASE=http://127.0.0.1:8870
 
@@ -16,18 +18,16 @@ $ curl -s -w "\n<- HTTP %{http_code}\n" $BASE/ledger/quickbooks/bills/
 {"error": "LedgerAuthError", "detail": "quickbooks: client is not connected. Complete the OAuth callback, or construct the client with a stored token."}
 <- HTTP 401
 
-$ # Step 1 of the OAuth round trip. Note the CSRF `state`, which the
-
-$ # original implementation never sent.
+$ # Step 1 of the OAuth round trip: a consent redirect carrying a CSRF state.
 
 $ curl -s -o /dev/null -D - -c cookies.txt $BASE/initiate_ledger_process/
 HTTP/1.1 302 Found
 Location: https://appcenter.intuit.com/connect/oauth2?client_id=demo-client-id&response_type=code&scope=com.intuit.quickbooks.accounting&redirect_uri=http%3A%2F%2F127.0.0.1%3A8870%2Faccounts%2Fquickbooks%2Flogin%2Fcallback%2F&state=<state>
-Set-Cookie:  sessionid=<redacted>; expires=Fri, 09 Oct 2026 19:21:06 GMT; HttpOnly; Max-Age=1209600; Path=/; SameSite=Lax
+Set-Cookie: sessionid=<redacted>; expires=Sun, 22 Nov 2026 15:34:36 GMT; HttpOnly; Max-Age=1209600; Path=/; SameSite=Lax
 
 $ # Step 2: the provider redirects back with the code and that same state.
 
-$ curl -s -b cookies.txt -c cookies.txt "$BASE/accounts/quickbooks/login/callback/?code=demo-auth-code&state=<state>&realmId=4620816365361496080"
+$ curl -s -b cookies.txt -c cookies.txt "$BASE/accounts/quickbooks/login/callback/?code=demo-auth-code&state=<state>&realmId=9130354520271396"
 {
     "provider": "quickbooks",
     "connected": true,
@@ -184,7 +184,7 @@ $ curl -s -w "\n<- HTTP %{http_code}\n" -b cookies.txt "$BASE/accounts/quickbook
 
 $ # Paging: three bills at a time, with the cursor for the next page.
 
-$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?limit=3"
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?limit=3" | python -m json.tool --indent 4
 {
     "items": [
         {
@@ -233,58 +233,32 @@ $ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?limit=3"
     "has_more": true
 }
 
-$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?limit=3&offset=3"
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?limit=3&offset=6" | python -m json.tool --indent 4
 {
     "items": [
         {
             "provider": "quickbooks",
-            "id": "144",
-            "vendor_id": "59",
-            "vendor_name": "Ellis Equipment Rental",
-            "total": "4310.40",
-            "balance": "4310.40",
-            "currency": "USD",
-            "document_number": "BILL-0144",
-            "issued_on": "2024-03-04",
-            "due_on": "2024-04-03",
-            "is_paid": false
-        },
-        {
-            "provider": "quickbooks",
-            "id": "145",
+            "id": "147",
             "vendor_id": "56",
             "vendor_name": "Norton Lumber and Building Materials",
-            "total": "620.00",
-            "balance": "120.00",
+            "total": "1234.56",
+            "balance": "234.56",
             "currency": "USD",
-            "document_number": "BILL-0145",
-            "issued_on": "2024-03-05",
-            "due_on": "2024-04-04",
-            "is_paid": false
-        },
-        {
-            "provider": "quickbooks",
-            "id": "146",
-            "vendor_id": "57",
-            "vendor_name": "Hicks Hardware",
-            "total": "42.00",
-            "balance": "42.00",
-            "currency": "USD",
-            "document_number": "BILL-0146",
-            "issued_on": "2024-03-06",
-            "due_on": "2024-04-05",
+            "document_number": "BILL-0147",
+            "issued_on": "2024-03-07",
+            "due_on": "2024-04-06",
             "is_paid": false
         }
     ],
-    "offset": 3,
+    "offset": 6,
     "limit": 3,
-    "next_offset": 6,
-    "has_more": true
+    "next_offset": null,
+    "has_more": false
 }
 
-$ # Filtering by vendor - the argument the original get_bills() ignored.
+$ # Filtering by vendor is pushed into the provider query.
 
-$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?vendor_id=56"
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?vendor_id=56" | python -m json.tool --indent 4
 {
     "items": [
         {
@@ -333,9 +307,7 @@ $ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?vendor_id=56"
     "has_more": false
 }
 
-$ # A single bill by id - the argument the original get_bill() ignored.
-
-$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/147/"
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/147/" | python -m json.tool --indent 4
 {
     "provider": "quickbooks",
     "id": "147",
@@ -350,7 +322,7 @@ $ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/147/"
     "is_paid": false
 }
 
-$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/vendors/?limit=2"
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/vendors/?limit=2" | python -m json.tool --indent 4
 {
     "items": [
         {
@@ -379,15 +351,7 @@ $ curl -s -b cookies.txt "$BASE/ledger/quickbooks/vendors/?limit=2"
 }
 
 $ curl -s -b cookies.txt "$BASE/ledger/quickbooks/vendors/59/"
-{
-    "provider": "quickbooks",
-    "id": "59",
-    "name": "Ellis Equipment Rental",
-    "balance": "4310.40",
-    "currency": "USD",
-    "email": "",
-    "active": false
-}
+{"provider": "quickbooks", "id": "59", "name": "Ellis Equipment Rental", "balance": "4310.40", "currency": "USD", "email": "", "active": false}
 
 $ # An id that does not exist maps to 404, not to a 500.
 
@@ -408,16 +372,4 @@ $ curl -s -w "\n<- HTTP %{http_code}\n" -b cookies.txt "$BASE/ledger/xero/bills/
 <- HTTP 401
 
 $ curl -s -b cookies.txt $BASE/ledger/providers/
-{
-    "default": "quickbooks",
-    "providers": [
-        {
-            "name": "quickbooks",
-            "connected": true
-        },
-        {
-            "name": "xero",
-            "connected": false
-        }
-    ]
-}
+{"default": "quickbooks", "providers": [{"name": "quickbooks", "connected": true}, {"name": "xero", "connected": false}]}

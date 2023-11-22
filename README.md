@@ -73,9 +73,12 @@ sequenceDiagram
     opt token within 60s of expiry
         C->>P: POST token_url grant_type=refresh_token
         P-->>C: replacement access token
-        Note over C,K: used for this request only<br/>never written back to the session
+        Note over C,K: LedgerService writes the new token<br/>back to K, even if the read then fails
     end
     C->>P: GET Invoices?page=2&pageSize=3
+    opt the token was refreshed
+        S->>K: set("xero", refreshed TokenSet)
+    end
     V-->>B: 200 JSON with next_offset=6
 ```
 
@@ -84,13 +87,30 @@ a callback would let a company with 20,000 bills turn a redirect into a multi-mi
 
 ## Running it
 
-Python 3.11 or newer. No database server and no provider credentials are needed to boot it.
+No database server and no provider credentials are needed to boot it. The one value you must
+supply is a signing key:
+
+```bash
+cp .env.example .env
+python3 -c "import secrets; print(secrets.token_urlsafe(50))"   # paste into DJANGO_SECRET_KEY
+docker compose up --build -d
+curl -s http://127.0.0.1:8870/healthz
+# {"status": "ok", "providers": ["quickbooks", "xero"]}
+```
+
+The image is two stages on `python:3.12-slim`: gunicorn as the non-root `ledger` user, SQLite on
+the `ledger-data` volume, a read-only root filesystem, and a `/healthz` healthcheck that never
+touches a provider. Compose publishes it on port 8870, and the rendered configuration is in
+[`docker-compose-config.txt`](docs/transcripts/docker-compose-config.txt). Use the generator above
+rather than Django's `get_random_secret_key()`: that one can emit `$`, which Compose expands as a
+variable inside `.env`.
+
+Without Docker, on Python 3.11 or newer:
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # then set DJANGO_SECRET_KEY in it to the output of:
-python -c "import secrets; print(secrets.token_urlsafe(50))"
+cp .env.example .env   # and set DJANGO_SECRET_KEY as above
 python manage.py migrate && python manage.py runserver 127.0.0.1:8870
 ```
 
@@ -105,11 +125,8 @@ QBOOK_API_BASE=http://127.0.0.1:8871/qbo QBOOK_TOKEN_URL=http://127.0.0.1:8871/o
 python manage.py runserver 127.0.0.1:8870
 ```
 
-**Container:** the `Dockerfile` and `docker-compose.yml` are written but **not built or booted**
-here — the project's own build report records `Build verified: NOT RUN — deferred, Docker off`, and
-the same for boot. What *is* checked is that `docker compose config` renders
-([transcript](docs/transcripts/docker-compose-config.txt)). As authored: two stages on
-`python:3.12-slim`, non-root `ledger` user, gunicorn, SQLite on a volume, `/healthz` healthcheck.
+Then open `/initiate_ledger_process/`, copy the `state` out of the redirect, and call the callback
+with it, as the [session transcript](docs/transcripts/api-session.txt) does step by step.
 
 ## Endpoints
 
@@ -126,7 +143,9 @@ the same for boot. What *is* checked is that `docker compose config` renders
 
 `limit` clamps to 1..100, and `vendor_id` is pushed into the provider's own query (`WHERE
 VendorRef = '56'` for QuickBooks, a `Contact.ContactID` clause for Xero) rather than filtered
-here. Xero pages by number, so an offset landing mid-page snaps back to that boundary.
+here. The QuickBooks literal is escaped, and a Xero vendor id must parse as a GUID, so neither can
+rewrite the filter. Record ids go into the provider URL as one percent-encoded path segment. Xero
+pages by number, so an offset landing mid-page snaps back to that boundary.
 
 ## Credentials — bring your own
 
@@ -151,17 +170,18 @@ this tree, rotate it in the provider's portal; scrubbing a file does not un-disc
 
 ## Tests, and what that actually proves
 
-`DJANGO_DEBUG=true python manage.py test` reports **131 tests, 0 failures** (confirmed on
-Python 3.12), `ruff check` is clean, and line coverage is 94% of 730 statements. The suite runs
-with sockets blocked: `NoNetworkMixin` swaps
+`DJANGO_DEBUG=true python manage.py test` runs **139 tests, 0 failures** on Python 3.11, 3.12 and
+3.13 against Django 5.2 LTS. `ruff check` is clean, and line coverage is 94% of 754 statements.
+The suite runs with sockets blocked: `NoNetworkMixin` swaps
 `socket.socket.connect` for a stub that fails the test, and providers are driven through a
 `FakeTransport` that refuses any URL it was not given a route for, so a test reaching for Intuit
-fails rather than quietly making a billable call — `NetworkGuardTests` asserts that guard bites.
-Captured runs: [`test-run.txt`](docs/transcripts/test-run.txt) (suite and lint, per test),
+fails rather than quietly making a billable call. `NetworkGuardTests` asserts that guard bites,
+and the whole suite passes inside a container started with `--network none`.
+Captured runs: [`test-run.txt`](docs/transcripts/test-run.txt) (lint, then every test by name),
 [`coverage.txt`](docs/transcripts/coverage.txt) (by module),
-[`python-versions.txt`](docs/transcripts/python-versions.txt) (3.11, 3.12, 3.13) and
-[`deploy-check.txt`](docs/transcripts/deploy-check.txt) (`check --deploy`, plus the no-key boot
-failure).
+[`python-versions.txt`](docs/transcripts/python-versions.txt) (a fresh venv per version, following
+the steps above) and [`deploy-check.txt`](docs/transcripts/deploy-check.txt) (`check --deploy`,
+the no-key boot failure, and a clean `makemigrations --check`).
 
 There is no vendor SDK in `requirements.txt` — four runtime packages, and the comment there
 explains why: `python-quickbooks` pins `intuit-oauth==1.2.4`, which reaches the `imp` module
@@ -187,11 +207,9 @@ network policy lives: one pooled session per process, a 15-second timeout, up to
 ## Known gaps
 
 - **Tokens live in the browser session.** Django signs the session cookie but does not encrypt it,
-  so a refresh token travels with the user. `TokenStore` is a protocol so a database-backed store
-  is one class — that class has not been written.
-- **A lazily refreshed token is not persisted.** `LedgerService.client()` rebuilds a client per
-  call from the stored token and `store.set()` runs only in `complete_authorization()`, so a
-  refresh during a read serves that one request and is discarded.
+  so a refresh token travels with the user. `TokenStore` is a protocol, so a database-backed store
+  is one class; that class has not been written. Refreshed tokens are written back, but two
+  concurrent requests that both refresh will race, and the last write wins.
 - **No authentication on the service itself.** Anyone who can reach it can start an OAuth flow.
 - **Xero has never run against the live API.** Written to the published Accounting API 2.0
   contract and unit-tested against recorded shapes, but no Xero credentials were available end to
@@ -199,3 +217,7 @@ network policy lives: one pooled session per process, a 15-second timeout, up to
 - **No caching and no background sync.** Every read is a live provider call, so paging 20,000 bills
   is 200 round trips. `iter_bills()` / `iter_vendors()` stream a collection behind a 100-page
   circuit breaker, but a deployment wants a task queue.
+
+## Licence
+
+MIT, see [`LICENSE`](LICENSE).

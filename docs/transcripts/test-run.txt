@@ -1,9 +1,9 @@
 $ ruff check .
 All checks passed!
 
-$ DJANGO_DEBUG=true python manage.py test --verbosity 2
+$ DJANGO_DEBUG=true python3 manage.py test --verbosity 2
 Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
-Found 131 test(s).
+Found 139 test(s).
 Operations to perform:
   Synchronize unmigrated apps: messages, staticfiles
   Apply all migrations: admin, auth, contenttypes, sessions
@@ -28,9 +28,7 @@ Running migrations:
   Applying auth.0010_alter_group_name_max_length... OK
   Applying auth.0011_update_proxy_permissions... OK
   Applying auth.0012_alter_user_first_name_max_length... OK
-  Applying sessions.0001_initial... OK
-System check identified no issues (0 silenced).
-test_initiate_redirects_to_the_provider_with_state (api.tests.test_views.AuthorizationTests.test_initiate_redirects_to_the_provider_with_state) ... ok
+  Applying sessions.0001_initial...test_initiate_redirects_to_the_provider_with_state (api.tests.test_views.AuthorizationTests.test_initiate_redirects_to_the_provider_with_state) ... ok
 test_missing_credentials_are_a_503_not_a_500 (api.tests.test_views.AuthorizationTests.test_missing_credentials_are_a_503_not_a_500) ... ok
 test_provider_query_parameter_selects_xero (api.tests.test_views.AuthorizationTests.test_provider_query_parameter_selects_xero) ... ok
 test_unconfigured_provider_is_a_404 (api.tests.test_views.AuthorizationTests.test_unconfigured_provider_is_a_404) ... ok
@@ -126,6 +124,7 @@ test_vendor_filter_is_applied (api.tests.test_quickbooks.QueryConstructionTests.
 test_blank_id_is_rejected_without_a_request (api.tests.test_quickbooks.SingleRecordTests.test_blank_id_is_rejected_without_a_request) ... ok
 test_get_bill_uses_the_id_it_is_given (api.tests.test_quickbooks.SingleRecordTests.test_get_bill_uses_the_id_it_is_given) ... ok
 test_get_vendor_uses_the_id_it_is_given (api.tests.test_quickbooks.SingleRecordTests.test_get_vendor_uses_the_id_it_is_given) ... ok
+test_id_cannot_climb_out_of_its_path_segment (api.tests.test_quickbooks.SingleRecordTests.test_id_cannot_climb_out_of_its_path_segment) ... ok
 test_missing_envelope_is_a_not_found (api.tests.test_quickbooks.SingleRecordTests.test_missing_envelope_is_a_not_found) ... ok
 test_building_a_client_makes_no_request (api.tests.test_registry.BuildClientTests.test_building_a_client_makes_no_request) ... ok
 test_extra_config_is_routed_to_the_matching_provider_only (api.tests.test_registry.BuildClientTests.test_extra_config_is_routed_to_the_matching_provider_only) ... ok
@@ -142,6 +141,11 @@ test_a_provider_must_declare_a_name (api.tests.test_registry.RegistryTests.test_
 test_both_shipped_providers_are_registered (api.tests.test_registry.RegistryTests.test_both_shipped_providers_are_registered) ... ok
 test_lookup_returns_the_class (api.tests.test_registry.RegistryTests.test_lookup_returns_the_class) ... ok
 test_unknown_provider_names_the_known_ones (api.tests.test_registry.RegistryTests.test_unknown_provider_names_the_known_ones) ... ok
+test_refresh_is_kept_even_when_the_read_fails (api.tests.test_services.RefreshPersistenceTests.test_refresh_is_kept_even_when_the_read_fails)
+A rotated refresh token is the only valid one left; losing it on a 404 ... ok
+test_refreshed_token_is_written_back_to_the_store (api.tests.test_services.RefreshPersistenceTests.test_refreshed_token_is_written_back_to_the_store) ... ok
+test_second_read_does_not_refresh_again (api.tests.test_services.RefreshPersistenceTests.test_second_read_does_not_refresh_again) ... ok
+test_unexpired_token_is_not_rewritten (api.tests.test_services.RefreshPersistenceTests.test_unexpired_token_is_not_rewritten) ... ok
 test_constructing_a_client_makes_no_request (api.tests.test_xero.ConstructionTests.test_constructing_a_client_makes_no_request) ... ok
 test_missing_tenant_is_a_clear_error (api.tests.test_xero.ConstructionTests.test_missing_tenant_is_a_clear_error) ... ok
 test_401_becomes_auth_error (api.tests.test_xero.ErrorTranslationTests.test_401_becomes_auth_error) ... ok
@@ -154,17 +158,23 @@ test_only_payable_invoices_are_requested (api.tests.test_xero.QueryConstructionT
 test_paging_table (api.tests.test_xero.QueryConstructionTests.test_paging_table) ... ok
 test_tenant_header_is_sent (api.tests.test_xero.QueryConstructionTests.test_tenant_header_is_sent) ... ok
 test_vendor_filter_adds_a_contact_clause (api.tests.test_xero.QueryConstructionTests.test_vendor_filter_adds_a_contact_clause) ... ok
+test_vendor_filter_canonicalises_the_guid (api.tests.test_xero.QueryConstructionTests.test_vendor_filter_canonicalises_the_guid) ... ok
+test_vendor_filter_refuses_anything_but_a_guid (api.tests.test_xero.QueryConstructionTests.test_vendor_filter_refuses_anything_but_a_guid) ... ok
 test_vendors_ask_only_for_suppliers (api.tests.test_xero.QueryConstructionTests.test_vendors_ask_only_for_suppliers) ... ok
 test_blank_id_is_rejected_without_a_request (api.tests.test_xero.SingleRecordTests.test_blank_id_is_rejected_without_a_request) ... ok
 test_empty_list_is_a_not_found (api.tests.test_xero.SingleRecordTests.test_empty_list_is_a_not_found) ... ok
 test_get_bill_unwraps_the_single_element_list (api.tests.test_xero.SingleRecordTests.test_get_bill_unwraps_the_single_element_list) ... ok
 test_get_vendor_unwraps_the_single_element_list (api.tests.test_xero.SingleRecordTests.test_get_vendor_unwraps_the_single_element_list) ... ok
+test_configured_tenant_skips_the_lookup (api.tests.test_xero.TenantDiscoveryTests.test_configured_tenant_skips_the_lookup) ... ok
 test_explicit_tenant_skips_the_lookup (api.tests.test_xero.TenantDiscoveryTests.test_explicit_tenant_skips_the_lookup) ... ok
 test_first_connection_becomes_the_tenant (api.tests.test_xero.TenantDiscoveryTests.test_first_connection_becomes_the_tenant) ... ok
 test_no_connected_organisation_is_an_auth_error (api.tests.test_xero.TenantDiscoveryTests.test_no_connected_organisation_is_an_auth_error) ... ok
 
 ----------------------------------------------------------------------
-Ran 131 tests in 0.082s
+Ran 139 tests in 0.074s
 
 OK
 Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+ OK
+System check identified no issues (0 silenced).
+
