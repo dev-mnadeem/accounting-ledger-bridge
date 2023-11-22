@@ -9,24 +9,29 @@ state parameter, persisting tokens — happens here.
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Callable, Mapping
+from typing import Any, TypeVar
 
 from django.conf import settings
 
 from .ledger import (
     DEFAULT_PAGE_SIZE,
+    Bill,
     LedgerAuthError,
     LedgerClientBase,
+    Page,
     RequestsTransport,
     Transport,
     UnknownProviderError,
+    Vendor,
     available_providers,
     build_client,
 )
 from .tokens import TokenStore
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
 
 #: One pooled session for the whole process. Building a transport per request
 #: was measurably the largest avoidable cost in the original code: it forced a
@@ -104,18 +109,38 @@ class LedgerService:
 
     # -- reads ---------------------------------------------------------
 
+    def _read(self, provider: str, read: Callable[[LedgerClientBase], T]) -> T:
+        """Run one read and keep any token the client refreshed along the way.
+
+        The ``finally`` matters: Xero rotates refresh tokens, so once a refresh
+        has happened the old refresh token is dead even if the read itself then
+        fails with a 404.
+        """
+        client = self.client(provider)
+        issued = client.current_token
+        try:
+            return read(client)
+        finally:
+            refreshed = client.current_token
+            if refreshed is not None and refreshed is not issued:
+                self.store.set(provider, refreshed)
+                logger.info("ledger: stored refreshed %s token", provider)
+
     def list_bills(self, provider: str, *, limit: int = DEFAULT_PAGE_SIZE,
-                   offset: int = 0, vendor_id: str | None = None):
-        return self.client(provider).get_bills(limit, vendor_id, offset=offset)
+                   offset: int = 0, vendor_id: str | None = None) -> Page[Bill]:
+        return self._read(
+            provider, lambda client: client.get_bills(limit, vendor_id, offset=offset)
+        )
 
-    def get_bill(self, provider: str, bill_id: str):
-        return self.client(provider).get_bill(bill_id)
+    def get_bill(self, provider: str, bill_id: str) -> Bill:
+        return self._read(provider, lambda client: client.get_bill(bill_id))
 
-    def list_vendors(self, provider: str, *, limit: int = DEFAULT_PAGE_SIZE, offset: int = 0):
-        return self.client(provider).get_vendors(limit, offset=offset)
+    def list_vendors(self, provider: str, *, limit: int = DEFAULT_PAGE_SIZE,
+                     offset: int = 0) -> Page[Vendor]:
+        return self._read(provider, lambda client: client.get_vendors(limit, offset=offset))
 
-    def get_vendor(self, provider: str, vendor_id: str):
-        return self.client(provider).get_vendor(vendor_id)
+    def get_vendor(self, provider: str, vendor_id: str) -> Vendor:
+        return self._read(provider, lambda client: client.get_vendor(vendor_id))
 
     def connection_summary(self, provider: str, *, limit: int = DEFAULT_PAGE_SIZE) -> dict:
         """First page of each collection — what the callback reports back.
@@ -124,12 +149,12 @@ class LedgerService:
         20,000 bills must not be able to turn an OAuth callback into a
         multi-minute request.
         """
-        client = self.client(provider)
-        bills = client.get_bills(limit)
-        vendors = client.get_vendors(limit)
-        return {
-            "provider": provider,
-            "connected": client.is_connected,
-            "bills": bills.as_dict(),
-            "vendors": vendors.as_dict(),
-        }
+        def first_pages(client: LedgerClientBase) -> dict:
+            return {
+                "provider": provider,
+                "connected": client.is_connected,
+                "bills": client.get_bills(limit).as_dict(),
+                "vendors": client.get_vendors(limit).as_dict(),
+            }
+
+        return self._read(provider, first_pages)

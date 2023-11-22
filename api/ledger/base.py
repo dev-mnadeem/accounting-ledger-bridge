@@ -112,6 +112,11 @@ class LedgerClientBase(ABC):
         return self._token
 
     @property
+    def current_token(self) -> TokenSet | None:
+        """The token this client holds right now, without refreshing it."""
+        return self._token
+
+    @property
     def is_connected(self) -> bool:
         return self._token is not None
 
