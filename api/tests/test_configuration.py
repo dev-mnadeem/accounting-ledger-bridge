@@ -84,9 +84,12 @@ class NoCommittedSecretsTests(SimpleTestCase):
     """Every tracked text file is scanned for the credentials that leaked."""
 
     def _tracked_files(self) -> list[Path]:
-        listing = subprocess.run(
-            ["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True, check=False
-        )
+        try:
+            listing = subprocess.run(
+                ["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True, check=False
+            )
+        except FileNotFoundError:  # slim images ship without git
+            self.skipTest("git is not installed")
         if listing.returncode != 0:  # not a git checkout (e.g. inside a container)
             self.skipTest("not a git working tree")
         return [
@@ -138,7 +141,9 @@ class NetworkGuardTests(NoNetworkMixin, SimpleTestCase):
 
     def test_opening_a_socket_fails_the_test(self):
         with self.assertRaises(AssertionError) as ctx:
-            socket.create_connection(("example.com", 443), timeout=1)
+            # A literal address (TEST-NET-1), so no DNS lookup runs first: on a
+            # host without a resolver that would fail before connect() is reached.
+            socket.create_connection(("192.0.2.1", 443), timeout=1)
         self.assertIn("attempted a real network connection", str(ctx.exception))
 
     def test_building_the_shared_transport_opens_nothing(self):
