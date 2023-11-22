@@ -68,6 +68,18 @@ class QueryConstructionTests(NoNetworkMixin, SimpleTestCase):
         self.assertIn('Type=="ACCPAY"', where)
         self.assertIn('Contact.ContactID==Guid("b1c2d3e4-0000-4000-8000-000000000001")', where)
 
+    def test_vendor_filter_refuses_anything_but_a_guid(self):
+        transport = FakeTransport({"/Invoices": json_response({"Invoices": []})})
+        with self.assertRaises(LedgerNotFound):
+            client(transport).get_bills(50, 'x")||Type=="ACCREC')
+        self.assertEqual(transport.requests, [])
+
+    def test_vendor_filter_canonicalises_the_guid(self):
+        transport = FakeTransport({"/Invoices": json_response({"Invoices": []})})
+        client(transport).get_bills(50, "B1C2D3E4000040008000000000000001")
+        self.assertIn('Guid("b1c2d3e4-0000-4000-8000-000000000001")',
+                      transport.last.params["where"])
+
     def test_tenant_header_is_sent(self):
         transport = FakeTransport({"/Invoices": json_response({"Invoices": []})})
         client(transport).get_bills()

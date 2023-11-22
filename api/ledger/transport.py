@@ -12,6 +12,7 @@ import logging
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, Protocol
+from urllib.parse import quote
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -101,6 +102,17 @@ class RequestsTransport:
 
     def close(self) -> None:
         self._session.close()
+
+
+def path_segment(record_id: str) -> str:
+    """Percent-encode a caller-supplied id for use as one URL path segment.
+
+    ``/`` is encoded, and ``.``/``..`` are refused outright: URL normalisation
+    would otherwise turn ``bill/..`` into a request for a different resource.
+    """
+    if record_id in (".", ".."):
+        raise LedgerNotFound(f"{record_id!r} is not a record id")
+    return quote(record_id, safe="")
 
 
 def raise_for_status(response: Response, *, context: str) -> Response:

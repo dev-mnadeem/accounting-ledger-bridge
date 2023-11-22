@@ -19,7 +19,7 @@ from .base import DEFAULT_PAGE_SIZE, LedgerClientBase, clamp_page_size
 from .domain import Bill, Page, Vendor, to_date, to_decimal
 from .errors import LedgerNotFound, LedgerTransportError
 from .oauth import OAuth2Config
-from .transport import raise_for_status
+from .transport import path_segment, raise_for_status
 
 AUTHORIZE_URL = "https://appcenter.intuit.com/connect/oauth2"
 TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
@@ -126,7 +126,9 @@ class QuickBooksLedgerClient(LedgerClientBase):
     def get_bill(self, bill_id: str) -> Bill:
         if not bill_id:
             raise LedgerNotFound("quickbooks get_bill: no bill id supplied")
-        payload = self._get(f"bill/{bill_id}", {}, context=f"quickbooks get_bill({bill_id})")
+        payload = self._get(
+            f"bill/{path_segment(bill_id)}", {}, context=f"quickbooks get_bill({bill_id})"
+        )
         row = payload.get("Bill")
         if not isinstance(row, Mapping):
             raise LedgerNotFound(f"quickbooks: bill {bill_id} not found")
@@ -151,7 +153,8 @@ class QuickBooksLedgerClient(LedgerClientBase):
         if not vendor_id:
             raise LedgerNotFound("quickbooks get_vendor: no vendor id supplied")
         payload = self._get(
-            f"vendor/{vendor_id}", {}, context=f"quickbooks get_vendor({vendor_id})"
+            f"vendor/{path_segment(vendor_id)}", {},
+            context=f"quickbooks get_vendor({vendor_id})",
         )
         row = payload.get("Vendor")
         if not isinstance(row, Mapping):

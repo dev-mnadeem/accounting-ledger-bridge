@@ -220,6 +220,16 @@ class SingleRecordTests(NoNetworkMixin, SimpleTestCase):
             client(transport).get_vendor("")
         self.assertEqual(transport.requests, [])
 
+    def test_id_cannot_climb_out_of_its_path_segment(self):
+        transport = FakeTransport({"/v3/company/": json_response({"Bill": QBO_BILL})})
+        client(transport).get_bill("147/../../vendor/56")
+        self.assertTrue(
+            transport.last.url.endswith("/bill/147%2F..%2F..%2Fvendor%2F56"), transport.last.url
+        )
+        with self.assertRaises(LedgerNotFound):
+            client(transport).get_vendor("..")
+        self.assertEqual(len(transport.requests), 1)
+
     def test_missing_envelope_is_a_not_found(self):
         transport = FakeTransport({"/bill/": json_response({"time": "2024-01-01"})})
         with self.assertRaises(LedgerNotFound):

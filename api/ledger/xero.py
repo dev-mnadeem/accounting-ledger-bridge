@@ -12,6 +12,7 @@ the shared domain types.
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import Mapping
 from typing import Any
 
@@ -19,7 +20,7 @@ from .base import DEFAULT_PAGE_SIZE, LedgerClientBase, clamp_page_size
 from .domain import Bill, Page, Vendor, to_date, to_decimal
 from .errors import LedgerAuthError, LedgerNotFound, LedgerTransportError
 from .oauth import OAuth2Config
-from .transport import raise_for_status
+from .transport import path_segment, raise_for_status
 
 AUTHORIZE_URL = "https://login.xero.com/identity/connect/authorize"
 TOKEN_URL = "https://identity.xero.com/connect/token"
@@ -33,6 +34,18 @@ SCOPES = (
     "accounting.contacts.read",
 )
 PAYABLE_TYPE = "ACCPAY"
+
+
+def _contact_guid(vendor_id: str) -> str:
+    """Return ``vendor_id`` in canonical GUID form, or refuse it.
+
+    The id is interpolated into a Xero ``where`` expression, so anything that
+    is not a GUID (a stray quote, ``||``) could otherwise rewrite the filter.
+    """
+    try:
+        return str(uuid.UUID(str(vendor_id)))
+    except ValueError:
+        raise LedgerNotFound(f"xero: {vendor_id!r} is not a contact id") from None
 
 
 class XeroLedgerClient(LedgerClientBase):
@@ -109,7 +122,7 @@ class XeroLedgerClient(LedgerClientBase):
         limit = clamp_page_size(num)
         where = f'Type=="{PAYABLE_TYPE}"'
         if vendor_id:
-            where += f'&&Contact.ContactID==Guid("{vendor_id}")'
+            where += f'&&Contact.ContactID==Guid("{_contact_guid(vendor_id)}")'
         # Xero pages by 1-based page number, so a caller offset only lands on a
         # page boundary; normalise the offset to the page we actually request.
         page_number = offset // limit + 1
@@ -131,7 +144,9 @@ class XeroLedgerClient(LedgerClientBase):
     def get_bill(self, bill_id: str) -> Bill:
         if not bill_id:
             raise LedgerNotFound("xero get_bill: no invoice id supplied")
-        payload = self._get(f"Invoices/{bill_id}", {}, context=f"xero get_bill({bill_id})")
+        payload = self._get(
+            f"Invoices/{path_segment(bill_id)}", {}, context=f"xero get_bill({bill_id})"
+        )
         rows = payload.get("Invoices") or []
         if not rows:
             raise LedgerNotFound(f"xero: invoice {bill_id} not found")
@@ -159,7 +174,7 @@ class XeroLedgerClient(LedgerClientBase):
         if not vendor_id:
             raise LedgerNotFound("xero get_vendor: no contact id supplied")
         payload = self._get(
-            f"Contacts/{vendor_id}", {}, context=f"xero get_vendor({vendor_id})"
+            f"Contacts/{path_segment(vendor_id)}", {}, context=f"xero get_vendor({vendor_id})",
         )
         rows = payload.get("Contacts") or []
         if not rows:
