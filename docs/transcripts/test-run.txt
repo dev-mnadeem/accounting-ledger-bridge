@@ -1,0 +1,170 @@
+$ ruff check .
+All checks passed!
+
+$ DJANGO_DEBUG=true python manage.py test --verbosity 2
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Found 131 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: messages, staticfiles
+  Apply all migrations: admin, auth, contenttypes, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+test_initiate_redirects_to_the_provider_with_state (api.tests.test_views.AuthorizationTests.test_initiate_redirects_to_the_provider_with_state) ... ok
+test_missing_credentials_are_a_503_not_a_500 (api.tests.test_views.AuthorizationTests.test_missing_credentials_are_a_503_not_a_500) ... ok
+test_provider_query_parameter_selects_xero (api.tests.test_views.AuthorizationTests.test_provider_query_parameter_selects_xero) ... ok
+test_unconfigured_provider_is_a_404 (api.tests.test_views.AuthorizationTests.test_unconfigured_provider_is_a_404) ... ok
+test_callback_with_no_state_at_all_is_rejected (api.tests.test_views.CallbackTests.test_callback_with_no_state_at_all_is_rejected) ... ok
+test_callback_without_a_matching_state_is_rejected (api.tests.test_views.CallbackTests.test_callback_without_a_matching_state_is_rejected) ... ok
+test_connection_survives_into_the_next_request (api.tests.test_views.CallbackTests.test_connection_survives_into_the_next_request) ... ok
+test_round_trip_exchanges_the_code_and_returns_a_summary (api.tests.test_views.CallbackTests.test_round_trip_exchanges_the_code_and_returns_a_summary) ... ok
+test_state_is_single_use (api.tests.test_views.CallbackTests.test_state_is_single_use) ... ok
+test_user_denied_consent (api.tests.test_views.CallbackTests.test_user_denied_consent) ... ok
+test_xero_callback_route (api.tests.test_views.CallbackTests.test_xero_callback_route) ... ok
+test_health_lists_providers_and_touches_nothing (api.tests.test_views.HealthTests.test_health_lists_providers_and_touches_nothing) ... ok
+test_post_is_rejected (api.tests.test_views.HealthTests.test_post_is_rejected) ... ok
+test_providers_endpoint_reports_connection_state (api.tests.test_views.HealthTests.test_providers_endpoint_reports_connection_state) ... ok
+test_bills_endpoint_returns_a_page (api.tests.test_views.ReadEndpointTests.test_bills_endpoint_returns_a_page) ... ok
+test_expired_credentials_become_a_401 (api.tests.test_views.ReadEndpointTests.test_expired_credentials_become_a_401) ... ok
+test_junk_paging_values_fall_back_to_defaults (api.tests.test_views.ReadEndpointTests.test_junk_paging_values_fall_back_to_defaults) ... ok
+test_limit_and_offset_reach_the_provider_query (api.tests.test_views.ReadEndpointTests.test_limit_and_offset_reach_the_provider_query) ... ok
+test_limit_is_clamped_to_the_maximum (api.tests.test_views.ReadEndpointTests.test_limit_is_clamped_to_the_maximum) ... ok
+test_provider_404_becomes_a_404 (api.tests.test_views.ReadEndpointTests.test_provider_404_becomes_a_404) ... ok
+test_provider_500_becomes_a_502 (api.tests.test_views.ReadEndpointTests.test_provider_500_becomes_a_502) ... ok
+test_single_bill_endpoint (api.tests.test_views.ReadEndpointTests.test_single_bill_endpoint) ... ok
+test_single_vendor_endpoint (api.tests.test_views.ReadEndpointTests.test_single_vendor_endpoint) ... ok
+test_vendor_filter_is_forwarded (api.tests.test_views.ReadEndpointTests.test_vendor_filter_is_forwarded) ... ok
+test_vendors_endpoint (api.tests.test_views.ReadEndpointTests.test_vendors_endpoint) ... ok
+test_reading_before_connecting_is_a_401_and_makes_no_call (api.tests.test_views.UnconnectedProviderTests.test_reading_before_connecting_is_a_401_and_makes_no_call) ... ok
+test_building_the_shared_transport_opens_nothing (api.tests.test_configuration.NetworkGuardTests.test_building_the_shared_transport_opens_nothing) ... ok
+test_opening_a_socket_fails_the_test (api.tests.test_configuration.NetworkGuardTests.test_opening_a_socket_fails_the_test) ... ok
+test_example_env_ships_no_values (api.tests.test_configuration.NoCommittedSecretsTests.test_example_env_ships_no_values) ... ok
+test_no_env_file_is_tracked (api.tests.test_configuration.NoCommittedSecretsTests.test_no_env_file_is_tracked) ... ok
+test_no_leaked_credential_survives_in_the_working_tree (api.tests.test_configuration.NoCommittedSecretsTests.test_no_leaked_credential_survives_in_the_working_tree) ... ok
+test_the_scanner_recognises_a_value_in_its_digest_set (api.tests.test_configuration.NoCommittedSecretsTests.test_the_scanner_recognises_a_value_in_its_digest_set)
+Proves the detector works, using a synthetic stand-in. ... ok
+test_allowed_hosts_is_never_a_wildcard (api.tests.test_configuration.SettingsSafetyTests.test_allowed_hosts_is_never_a_wildcard) ... ok
+test_both_providers_are_configured (api.tests.test_configuration.SettingsSafetyTests.test_both_providers_are_configured) ... ok
+test_default_provider_is_configured (api.tests.test_configuration.SettingsSafetyTests.test_default_provider_is_configured) ... ok
+test_secret_key_is_not_one_of_the_leaked_credentials (api.tests.test_configuration.SettingsSafetyTests.test_secret_key_is_not_one_of_the_leaked_credentials) ... ok
+test_security_headers_are_on (api.tests.test_configuration.SettingsSafetyTests.test_security_headers_are_on) ... ok
+test_unconfigured_provider_lookup_raises (api.tests.test_configuration.SettingsSafetyTests.test_unconfigured_provider_lookup_raises) ... ok
+test_as_dict_handles_missing_dates (api.tests.test_domain.BillTests.test_as_dict_handles_missing_dates) ... ok
+test_as_dict_serialises_money_as_string (api.tests.test_domain.BillTests.test_as_dict_serialises_money_as_string) ... ok
+test_is_paid (api.tests.test_domain.BillTests.test_is_paid) ... ok
+test_extra_precision_is_never_rounded_away (api.tests.test_domain.FormatAmountTests.test_extra_precision_is_never_rounded_away) ... ok
+test_table (api.tests.test_domain.FormatAmountTests.test_table) ... ok
+test_as_dict (api.tests.test_domain.PageTests.test_as_dict) ... ok
+test_has_more_follows_next_offset (api.tests.test_domain.PageTests.test_has_more_follows_next_offset) ... ok
+test_len_and_iteration (api.tests.test_domain.PageTests.test_len_and_iteration) ... ok
+test_table (api.tests.test_domain.ToDateTests.test_table) ... ok
+test_float_amount_is_not_corrupted (api.tests.test_domain.ToDecimalTests.test_float_amount_is_not_corrupted) ... ok
+test_table (api.tests.test_domain.ToDecimalTests.test_table) ... ok
+test_caller_supplied_state_is_honoured (api.tests.test_oauth.AuthorizationUrlTests.test_caller_supplied_state_is_honoured) ... ok
+test_contains_every_required_parameter (api.tests.test_oauth.AuthorizationUrlTests.test_contains_every_required_parameter) ... ok
+test_missing_credentials_are_all_named (api.tests.test_oauth.AuthorizationUrlTests.test_missing_credentials_are_all_named) ... ok
+test_state_is_random_per_call (api.tests.test_oauth.AuthorizationUrlTests.test_state_is_random_per_call) ... ok
+test_accessing_an_expired_token_refreshes_it (api.tests.test_oauth.ExpiredTokenTests.test_accessing_an_expired_token_refreshes_it) ... ok
+test_unconnected_client_raises_instead_of_calling_out (api.tests.test_oauth.ExpiredTokenTests.test_unconnected_client_raises_instead_of_calling_out) ... ok
+test_refresh_sends_the_refresh_grant (api.tests.test_oauth.RefreshTests.test_refresh_sends_the_refresh_grant) ... ok
+test_refresh_without_a_refresh_token_is_refused_offline (api.tests.test_oauth.RefreshTests.test_refresh_without_a_refresh_token_is_refused_offline) ... ok
+test_rotation_without_a_new_refresh_token_keeps_the_old_one (api.tests.test_oauth.RefreshTests.test_rotation_without_a_new_refresh_token_keeps_the_old_one) ... ok
+test_empty_code_never_reaches_the_provider (api.tests.test_oauth.TokenExchangeTests.test_empty_code_never_reaches_the_provider) ... ok
+test_exchange_posts_basic_auth_and_form_body (api.tests.test_oauth.TokenExchangeTests.test_exchange_posts_basic_auth_and_form_body) ... ok
+test_non_json_token_response_is_an_error (api.tests.test_oauth.TokenExchangeTests.test_non_json_token_response_is_an_error) ... ok
+test_rejected_credentials_raise_auth_error (api.tests.test_oauth.TokenExchangeTests.test_rejected_credentials_raise_auth_error) ... ok
+test_token_response_without_access_token_is_an_error (api.tests.test_oauth.TokenExchangeTests.test_token_response_without_access_token_is_an_error) ... ok
+test_expiry_uses_a_safety_skew (api.tests.test_oauth.TokenSetTests.test_expiry_uses_a_safety_skew) ... ok
+test_from_payload_computes_absolute_expiry (api.tests.test_oauth.TokenSetTests.test_from_payload_computes_absolute_expiry) ... ok
+test_round_trips_through_a_session_payload (api.tests.test_oauth.TokenSetTests.test_round_trips_through_a_session_payload) ... ok
+test_token_without_an_expiry_never_expires (api.tests.test_oauth.TokenSetTests.test_token_without_an_expiry_never_expires) ... ok
+test_realm_id_from_the_callback_becomes_the_company_id (api.tests.test_quickbooks.ConnectTests.test_realm_id_from_the_callback_becomes_the_company_id) ... ok
+test_constructing_a_client_makes_no_request (api.tests.test_quickbooks.ConstructionTests.test_constructing_a_client_makes_no_request) ... ok
+test_missing_company_id_is_a_clear_error (api.tests.test_quickbooks.ConstructionTests.test_missing_company_id_is_a_clear_error) ... ok
+test_sandbox_and_production_hosts_differ (api.tests.test_quickbooks.ConstructionTests.test_sandbox_and_production_hosts_differ) ... ok
+test_unknown_environment_falls_back_to_sandbox (api.tests.test_quickbooks.ConstructionTests.test_unknown_environment_falls_back_to_sandbox) ... ok
+test_401_becomes_auth_error (api.tests.test_quickbooks.ErrorTranslationTests.test_401_becomes_auth_error) ... ok
+test_403_becomes_auth_error (api.tests.test_quickbooks.ErrorTranslationTests.test_403_becomes_auth_error) ... ok
+test_404_becomes_not_found (api.tests.test_quickbooks.ErrorTranslationTests.test_404_becomes_not_found) ... ok
+test_500_becomes_transport_error_carrying_the_status (api.tests.test_quickbooks.ErrorTranslationTests.test_500_becomes_transport_error_carrying_the_status) ... ok
+test_html_error_page_is_a_transport_error_not_a_crash (api.tests.test_quickbooks.ErrorTranslationTests.test_html_error_page_is_a_transport_error_not_a_crash) ... ok
+test_bill_fields_map_exactly (api.tests.test_quickbooks.MappingTests.test_bill_fields_map_exactly) ... ok
+test_empty_query_response_yields_an_empty_page (api.tests.test_quickbooks.MappingTests.test_empty_query_response_yields_an_empty_page) ... ok
+test_sparse_row_does_not_explode (api.tests.test_quickbooks.MappingTests.test_sparse_row_does_not_explode) ... ok
+test_vendor_fields_map_exactly (api.tests.test_quickbooks.MappingTests.test_vendor_fields_map_exactly) ... ok
+test_zero_balance_bill_is_paid (api.tests.test_quickbooks.MappingTests.test_zero_balance_bill_is_paid) ... ok
+test_full_page_advertises_a_next_offset (api.tests.test_quickbooks.PaginationTests.test_full_page_advertises_a_next_offset) ... ok
+test_iter_bills_pages_until_a_short_page (api.tests.test_quickbooks.PaginationTests.test_iter_bills_pages_until_a_short_page) ... ok
+test_iter_bills_stops_at_the_page_ceiling (api.tests.test_quickbooks.PaginationTests.test_iter_bills_stops_at_the_page_ceiling) ... ok
+test_short_page_ends_the_collection (api.tests.test_quickbooks.PaginationTests.test_short_page_ends_the_collection) ... ok
+test_company_id_is_in_the_path (api.tests.test_quickbooks.QueryConstructionTests.test_company_id_is_in_the_path) ... ok
+test_minor_version_and_auth_header_are_sent (api.tests.test_quickbooks.QueryConstructionTests.test_minor_version_and_auth_header_are_sent) ... ok
+test_no_vendor_filter_when_none (api.tests.test_quickbooks.QueryConstructionTests.test_no_vendor_filter_when_none) ... ok
+test_paging_table (api.tests.test_quickbooks.QueryConstructionTests.test_paging_table) ... ok
+test_quotes_in_a_vendor_id_are_escaped (api.tests.test_quickbooks.QueryConstructionTests.test_quotes_in_a_vendor_id_are_escaped) ... ok
+test_vendor_filter_is_applied (api.tests.test_quickbooks.QueryConstructionTests.test_vendor_filter_is_applied) ... ok
+test_blank_id_is_rejected_without_a_request (api.tests.test_quickbooks.SingleRecordTests.test_blank_id_is_rejected_without_a_request) ... ok
+test_get_bill_uses_the_id_it_is_given (api.tests.test_quickbooks.SingleRecordTests.test_get_bill_uses_the_id_it_is_given) ... ok
+test_get_vendor_uses_the_id_it_is_given (api.tests.test_quickbooks.SingleRecordTests.test_get_vendor_uses_the_id_it_is_given) ... ok
+test_missing_envelope_is_a_not_found (api.tests.test_quickbooks.SingleRecordTests.test_missing_envelope_is_a_not_found) ... ok
+test_building_a_client_makes_no_request (api.tests.test_registry.BuildClientTests.test_building_a_client_makes_no_request) ... ok
+test_extra_config_is_routed_to_the_matching_provider_only (api.tests.test_registry.BuildClientTests.test_extra_config_is_routed_to_the_matching_provider_only) ... ok
+test_missing_config_keys_default_to_blank_not_none (api.tests.test_registry.BuildClientTests.test_missing_config_keys_default_to_blank_not_none) ... ok
+test_unknown_provider_is_refused (api.tests.test_registry.BuildClientTests.test_unknown_provider_is_refused) ... ok
+test_table (api.tests.test_registry.ClampTests.test_table) ... ok
+test_all_providers_implement_the_four_read_operations (api.tests.test_registry.ContractConformanceTests.test_all_providers_implement_the_four_read_operations) ... ok
+test_collection_reads_return_a_page (api.tests.test_registry.ContractConformanceTests.test_collection_reads_return_a_page) ... ok
+test_no_override_keeps_the_real_provider_hosts (api.tests.test_registry.EndpointOverrideTests.test_no_override_keeps_the_real_provider_hosts) ... ok
+test_quickbooks_api_base_override_is_used (api.tests.test_registry.EndpointOverrideTests.test_quickbooks_api_base_override_is_used) ... ok
+test_quickbooks_token_url_override_is_used (api.tests.test_registry.EndpointOverrideTests.test_quickbooks_token_url_override_is_used) ... ok
+test_xero_api_base_override_also_moves_the_connections_url (api.tests.test_registry.EndpointOverrideTests.test_xero_api_base_override_also_moves_the_connections_url) ... ok
+test_a_provider_must_declare_a_name (api.tests.test_registry.RegistryTests.test_a_provider_must_declare_a_name) ... ok
+test_both_shipped_providers_are_registered (api.tests.test_registry.RegistryTests.test_both_shipped_providers_are_registered) ... ok
+test_lookup_returns_the_class (api.tests.test_registry.RegistryTests.test_lookup_returns_the_class) ... ok
+test_unknown_provider_names_the_known_ones (api.tests.test_registry.RegistryTests.test_unknown_provider_names_the_known_ones) ... ok
+test_constructing_a_client_makes_no_request (api.tests.test_xero.ConstructionTests.test_constructing_a_client_makes_no_request) ... ok
+test_missing_tenant_is_a_clear_error (api.tests.test_xero.ConstructionTests.test_missing_tenant_is_a_clear_error) ... ok
+test_401_becomes_auth_error (api.tests.test_xero.ErrorTranslationTests.test_401_becomes_auth_error) ... ok
+test_429_becomes_transport_error (api.tests.test_xero.ErrorTranslationTests.test_429_becomes_transport_error) ... ok
+test_archived_contact_is_inactive (api.tests.test_xero.MappingTests.test_archived_contact_is_inactive) ... ok
+test_both_providers_produce_the_same_shape (api.tests.test_xero.MappingTests.test_both_providers_produce_the_same_shape) ... ok
+test_contact_maps_onto_the_shared_vendor_type (api.tests.test_xero.MappingTests.test_contact_maps_onto_the_shared_vendor_type) ... ok
+test_invoice_maps_onto_the_shared_bill_type (api.tests.test_xero.MappingTests.test_invoice_maps_onto_the_shared_bill_type) ... ok
+test_only_payable_invoices_are_requested (api.tests.test_xero.QueryConstructionTests.test_only_payable_invoices_are_requested) ... ok
+test_paging_table (api.tests.test_xero.QueryConstructionTests.test_paging_table) ... ok
+test_tenant_header_is_sent (api.tests.test_xero.QueryConstructionTests.test_tenant_header_is_sent) ... ok
+test_vendor_filter_adds_a_contact_clause (api.tests.test_xero.QueryConstructionTests.test_vendor_filter_adds_a_contact_clause) ... ok
+test_vendors_ask_only_for_suppliers (api.tests.test_xero.QueryConstructionTests.test_vendors_ask_only_for_suppliers) ... ok
+test_blank_id_is_rejected_without_a_request (api.tests.test_xero.SingleRecordTests.test_blank_id_is_rejected_without_a_request) ... ok
+test_empty_list_is_a_not_found (api.tests.test_xero.SingleRecordTests.test_empty_list_is_a_not_found) ... ok
+test_get_bill_unwraps_the_single_element_list (api.tests.test_xero.SingleRecordTests.test_get_bill_unwraps_the_single_element_list) ... ok
+test_get_vendor_unwraps_the_single_element_list (api.tests.test_xero.SingleRecordTests.test_get_vendor_unwraps_the_single_element_list) ... ok
+test_explicit_tenant_skips_the_lookup (api.tests.test_xero.TenantDiscoveryTests.test_explicit_tenant_skips_the_lookup) ... ok
+test_first_connection_becomes_the_tenant (api.tests.test_xero.TenantDiscoveryTests.test_first_connection_becomes_the_tenant) ... ok
+test_no_connected_organisation_is_an_auth_error (api.tests.test_xero.TenantDiscoveryTests.test_no_connected_organisation_is_an_auth_error) ... ok
+
+----------------------------------------------------------------------
+Ran 131 tests in 0.082s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

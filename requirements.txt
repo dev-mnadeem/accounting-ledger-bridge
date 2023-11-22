@@ -1,0 +1,11 @@
+# Runtime dependencies.
+#
+# Note the absence of `intuit-oauth` / `python-quickbooks`. They pinned
+# `intuit-oauth==1.2.4`, which depends on `future`, which imports the `imp`
+# module Python 3.12 removed -- the project could not run on any Python newer
+# than 3.11. The QuickBooks and Xero REST calls are issued directly instead;
+# see the README design notes.
+Django==4.2.7
+python-decouple==3.8
+requests==2.31.0
+urllib3==2.1.0
