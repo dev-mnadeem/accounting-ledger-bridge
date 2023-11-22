@@ -1,0 +1,46 @@
+[project]
+name = "accounting-ledger-bridge"
+version = "1.0.0"
+description = "A Django service that reads bills and vendors from QuickBooks Online and Xero behind one provider-neutral interface."
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 96
+target-version = "py311"
+extend-exclude = ["project_venv", "migrations"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "W",    # pycodestyle warnings
+    "I",    # import sorting
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "C4",   # comprehensions
+    "DJ",   # flake8-django
+    "SIM",  # simplify
+    "RET",  # return style
+    "ARG",  # unused arguments
+]
+ignore = [
+    # Django views take `request` whether or not they read it.
+    "ARG001",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Test doubles mirror a Protocol signature and legitimately ignore arguments.
+"api/tests/*" = ["ARG002", "ARG005"]
+# The registry imports providers at the bottom on purpose (see its docstring).
+"api/ledger/registry.py" = ["E402"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["api", "routeable_app"]
+
+[tool.coverage.run]
+source = ["api", "routeable_app"]
+omit = ["*/migrations/*", "*/tests/*", "manage.py", "*/asgi.py", "*/wsgi.py"]
+
+[tool.coverage.report]
+skip_empty = true
+exclude_lines = ["pragma: no cover", "raise NotImplementedError", "\\.\\.\\."]

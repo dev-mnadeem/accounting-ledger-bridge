@@ -1,0 +1,5 @@
+-r requirements.txt
+
+# Linting and formatting. Both are configured in pyproject.toml.
+ruff==0.6.9
+coverage==7.6.1
