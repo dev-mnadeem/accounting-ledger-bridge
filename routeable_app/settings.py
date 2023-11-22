@@ -29,8 +29,7 @@ SECRET_KEY = config(
 if not SECRET_KEY:
     raise RuntimeError(
         "DJANGO_SECRET_KEY is not set. Generate one with:\n"
-        "  python -c \"from django.core.management.utils import "
-        "get_random_secret_key as k; print(k())\""
+        "  python -c \"import secrets; print(secrets.token_urlsafe(50))\""
     )
 
 ALLOWED_HOSTS = config(

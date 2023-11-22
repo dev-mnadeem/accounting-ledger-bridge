@@ -90,7 +90,7 @@ Python 3.11 or newer. No database server and no provider credentials are needed 
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env   # then set DJANGO_SECRET_KEY in it to the output of:
-python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"
+python -c "import secrets; print(secrets.token_urlsafe(50))"
 python manage.py migrate && python manage.py runserver 127.0.0.1:8870
 ```
 
