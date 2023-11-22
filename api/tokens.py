@@ -22,13 +22,19 @@ STATE_KEY_PREFIX = "ledger_state:"
 
 
 class TokenStore(Protocol):
-    """Persist one :class:`TokenSet` per provider."""
+    """Persist one :class:`TokenSet`, and one pending OAuth state, per provider."""
 
     def get(self, provider: str) -> TokenSet | None: ...
 
     def set(self, provider: str, token: TokenSet) -> None: ...
 
     def clear(self, provider: str) -> None: ...
+
+    def put_state(self, provider: str, state: str) -> None: ...
+
+    def pop_state(self, provider: str) -> str:
+        """Return the stored state and forget it, so it can be used only once."""
+        ...
 
 
 class SessionTokenStore:
