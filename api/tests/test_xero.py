@@ -197,6 +197,13 @@ class TenantDiscoveryTests(NoNetworkMixin, SimpleTestCase):
         self.assertEqual(fresh.tenant_id, TENANT)
         self.assertEqual(len(transport.requests), 1)
 
+    def test_configured_tenant_skips_the_lookup(self):
+        transport = self._connected_transport([{"tenantId": "some-other-org"}])
+        pinned = XeroLedgerClient(CREDENTIALS, transport=transport, tenant_id=TENANT)
+        token = pinned.connect("auth-code")
+        self.assertEqual(token.tenant_id, TENANT)
+        self.assertEqual(transport.urls(), ["https://identity.xero.com/connect/token"])
+
     def test_no_connected_organisation_is_an_auth_error(self):
         transport = self._connected_transport([])
         fresh = XeroLedgerClient(CREDENTIALS, transport=transport)

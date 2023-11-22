@@ -73,8 +73,11 @@ class XeroLedgerClient(LedgerClientBase):
 
     def _after_connect(self, token, **provider_kwargs):
         # Unlike QuickBooks, Xero does not name the organisation on the
-        # callback: it has to be read back from /connections.
-        token.tenant_id = provider_kwargs.get("tenant_id") or self._first_tenant(token)
+        # callback: unless XERO_TENANT_ID pins one, it is read back from
+        # /connections.
+        token.tenant_id = (
+            provider_kwargs.get("tenant_id") or self.tenant_id or self._first_tenant(token)
+        )
         self.tenant_id = token.tenant_id
         return token
 
