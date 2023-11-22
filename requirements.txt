@@ -5,7 +5,7 @@
 # module Python 3.12 removed -- the project could not run on any Python newer
 # than 3.11. The QuickBooks and Xero REST calls are issued directly instead;
 # see the README design notes.
-Django==4.2.7
+Django==5.2.19
 python-decouple==3.8
-requests==2.31.0
-urllib3==2.1.0
+requests==2.34.2
+urllib3==2.8.0
