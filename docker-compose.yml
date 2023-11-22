@@ -1,3 +1,7 @@
+# A fixed project name, so container and volume names do not depend on the
+# folder this was cloned into.
+name: ledger-bridge
+
 services:
   ledger-bridge:
     build:
