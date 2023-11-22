@@ -89,7 +89,7 @@ Python 3.11 or newer. No database server and no provider credentials are needed 
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp example.env .env   # then set DJANGO_SECRET_KEY in it to the output of:
+cp .env.example .env   # then set DJANGO_SECRET_KEY in it to the output of:
 python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"
 python manage.py migrate && python manage.py runserver 127.0.0.1:8870
 ```
@@ -131,7 +131,7 @@ here. Xero pages by number, so an offset landing mid-page snaps back to that bou
 ## Credentials — bring your own
 
 **Nothing here ships a usable credential**, and no provider credential is present in this
-repository's git history. `example.env` is a blank template; fill in a copy at `.env`, which
+repository's git history. `.env.example` is a blank template; fill in a copy at `.env`, which
 `.gitignore` covers. `QBOOK_CLIENT_ID` / `QBOOK_CLIENT_SECRET` / `QBOOK_REDIRECT_URI` come from
 your own app in the Intuit developer portal, `XERO_CLIENT_ID` / `XERO_CLIENT_SECRET` /
 `XERO_REDIRECT_URI` from your own app at developer.xero.com, and each redirect URI must match the
@@ -141,7 +141,7 @@ with instructions rather than signing sessions with a public string.
 Every value is read from the environment through `python-decouple`, none with a credential
 default, and `OAuth2Credentials.require()` refuses to build a consent URL or touch a token
 endpoint until `client_id`, `client_secret` and `redirect_uri` are all set, naming every
-missing field at once. `example.env` documents the remaining knobs. `DEBUG` defaults to false and
+missing field at once. `.env.example` documents the remaining knobs. `DEBUG` defaults to false and
 `ALLOWED_HOSTS` is never `*`.
 
 `api/tests/test_configuration.py` is the standing guard: it walks every tracked text file and

@@ -51,7 +51,7 @@ class OAuth2Credentials:
         if missing:
             raise LedgerConfigurationError(
                 f"{provider}: missing required credentials: {', '.join(missing)}. "
-                f"Set the matching environment variables (see example.env)."
+                f"Set the matching environment variables (see .env.example)."
             )
 
 

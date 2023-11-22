@@ -3,7 +3,7 @@
 These are regression tests for defects that were actually present:
 ``DEBUG = True``, ``ALLOWED_HOSTS = ['*']`` and a Django signing key committed
 to the repository, alongside live-looking QuickBooks and Xero OAuth client
-secrets in ``example.env`` — plus a provider SDK that opened a socket from a
+secrets in the env template — plus a provider SDK that opened a socket from a
 constructor.
 
 The leaked values are matched by SHA-256 rather than stored literally, so
@@ -29,7 +29,7 @@ from .support import NoNetworkMixin
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 #: SHA-256 of each credential that was committed: the Django SECRET_KEY, then
-#: the Xero and QuickBooks client ids and secrets from example.env.
+#: the Xero and QuickBooks client ids and secrets from the env template.
 LEAKED_DIGESTS = frozenset({
     "921a86aaf5f9551c214f48136981ecc93f40ebc61591498bb7adc394edf88993",
     "ba39d7750ae8652703f5abea8ffc03ebbd3221f11f7a68b313e9d08f15a31ecc",
@@ -126,10 +126,10 @@ class NoCommittedSecretsTests(SimpleTestCase):
     def test_no_env_file_is_tracked(self):
         tracked = {p.name for p in self._tracked_files()}
         self.assertNotIn(".env", tracked)
-        self.assertIn("example.env", tracked)
+        self.assertIn(".env.example", tracked)
 
     def test_example_env_ships_no_values(self):
-        body = (REPO_ROOT / "example.env").read_text()
+        body = (REPO_ROOT / ".env.example").read_text()
         for line in body.splitlines():
             if line.startswith(("QBOOK_CLIENT", "XERO_CLIENT", "DJANGO_SECRET_KEY")):
                 with self.subTest(line=line):

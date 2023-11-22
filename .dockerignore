@@ -10,7 +10,7 @@
 # Secrets and local state
 .env
 *.env
-!example.env
+.env.*
 *.sqlite3
 db.sqlite3*
 staticfiles/

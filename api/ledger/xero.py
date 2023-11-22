@@ -1,6 +1,6 @@
 """Xero provider.
 
-``example.env`` has shipped ``XERO_CLIENT_ID`` / ``XERO_CLIENT_SECRET`` since
+The env template has shipped ``XERO_CLIENT_ID`` / ``XERO_CLIENT_SECRET`` since
 the first commit, but no Xero implementation ever existed — the abstract base
 had exactly one subclass. This is that second subclass, and it is the reason
 the base class earns its keep.
