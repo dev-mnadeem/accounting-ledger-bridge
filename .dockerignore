@@ -1,0 +1,38 @@
+# Keep the build context to source only: everything below is either secret,
+# machine-local, or regenerated inside the image.
+.git
+.github
+.gitignore
+.ruff_cache
+.idea
+.vscode
+
+# Secrets and local state
+.env
+*.env
+!example.env
+*.sqlite3
+db.sqlite3*
+staticfiles/
+
+# Virtualenvs
+project_venv/
+venv/
+.venv/
+
+# Python build artefacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Docs and local tooling are not needed at runtime
+docs/
+README.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+requirements-dev.txt

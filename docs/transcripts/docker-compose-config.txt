@@ -1,0 +1,50 @@
+name: routable
+services:
+  ledger-bridge:
+    build:
+      context: /Users/dev/Documents/Projects/WAMO/githubs/all_projects/routable
+      dockerfile: Dockerfile
+    deploy:
+      resources:
+        limits:
+          memory: "536870912"
+    environment:
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,[::1],ledger-bridge
+      DJANGO_DB_PATH: /data/db.sqlite3
+      PORT: "8000"
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - --fail
+        - --silent
+        - http://127.0.0.1:8000/healthz
+      timeout: 3s
+      interval: 30s
+      retries: 3
+      start_period: 10s
+    image: accounting-ledger-bridge:local
+    networks:
+      default: null
+    ports:
+      - mode: ingress
+        target: 8000
+        published: "8870"
+        protocol: tcp
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    volumes:
+      - type: volume
+        source: ledger-data
+        target: /data
+        volume: {}
+networks:
+  default:
+    name: routable_default
+volumes:
+  ledger-data:
+    name: routable_ledger-data

@@ -1,0 +1,42 @@
+services:
+  ledger-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: accounting-ledger-bridge:local
+    # Host port 8870 so this can run alongside other services on 8000/8080.
+    ports:
+      - "8870:8000"
+    # Copy example.env to .env and fill it in. Marked optional so `docker
+    # compose config` parses on a fresh clone.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Inside the container the app is reached through the published port on
+      # the host, so both must be trusted.
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,[::1],ledger-bridge"
+      DJANGO_DB_PATH: /data/db.sqlite3
+      PORT: "8000"
+    volumes:
+      - ledger-data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8000/healthz"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    # The service only ever makes outbound HTTPS calls and writes to /data.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+volumes:
+  ledger-data:
