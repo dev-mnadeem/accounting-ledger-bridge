@@ -1,0 +1,22 @@
+# The same suite, against the same requirements.txt, on three Python versions.
+# The previous dependency set could not import at all on 3.12 or newer:
+#   intuit-oauth 1.2.4 -> future -> `import imp`  (removed in Python 3.12)
+
+$ python3.11.16 manage.py test
+Ran 131 tests in 0.072s
+
+OK
+Destroying test database for alias 'default'...
+
+$ python3.12.6 manage.py test
+Ran 131 tests in 0.069s
+
+OK
+Destroying test database for alias 'default'...
+
+$ python3.13.7 manage.py test
+Ran 131 tests in 0.066s
+
+OK
+Destroying test database for alias 'default'...
+

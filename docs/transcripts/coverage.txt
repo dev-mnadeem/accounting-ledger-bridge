@@ -1,0 +1,22 @@
+$ DJANGO_DEBUG=true coverage run manage.py test && coverage report
+Name                        Stmts   Miss  Cover
+-----------------------------------------------
+api/apps.py                     4      0   100%
+api/ledger/__init__.py          9      0   100%
+api/ledger/base.py             76      9    88%
+api/ledger/domain.py           70      0   100%
+api/ledger/errors.py           10      0   100%
+api/ledger/oauth.py            79      0   100%
+api/ledger/quickbooks.py       84      1    99%
+api/ledger/registry.py         32      0   100%
+api/ledger/transport.py        49     10    80%
+api/ledger/xero.py             88      2    98%
+api/services.py                57      2    96%
+api/tokens.py                  39      9    77%
+api/views.py                   84      5    94%
+routeable_app/settings.py      45      8    82%
+routeable_app/urls.py           4      0   100%
+-----------------------------------------------
+TOTAL                         730     46    94%
+
+2 empty files skipped.

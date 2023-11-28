@@ -1,0 +1,14 @@
+# Production-mode security check. Run with a generated key and a real host,
+# DJANGO_DEBUG unset (so DEBUG=False).
+
+$ DJANGO_SECRET_KEY=<generated> DJANGO_ALLOWED_HOSTS=ledger.example.com \
+  DJANGO_HSTS_PRELOAD=true python manage.py check --deploy
+System check identified no issues (0 silenced).
+
+# And the boot-time guard: no secret key, not debug.
+
+$ env -i PATH=$PATH python manage.py check
+  File "/Users/dev/Documents/Projects/WAMO/githubs/all_projects/routable/routeable_app/settings.py", line 30, in <module>
+    raise RuntimeError(
+RuntimeError: DJANGO_SECRET_KEY is not set. Generate one with:
+  python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"

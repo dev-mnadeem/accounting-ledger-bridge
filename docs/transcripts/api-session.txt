@@ -1,0 +1,423 @@
+Captured 2026-09-25 19:21 UTC against the service running on 127.0.0.1:8870,
+with docs/local_provider_stub.py on 127.0.0.1:8871 standing in for the QuickBooks
+Online API. The session cookie is redacted; every other byte is verbatim.
+
+  BASE=http://127.0.0.1:8870
+
+$ curl -s $BASE/healthz
+{"status": "ok", "providers": ["quickbooks", "xero"]}
+
+$ curl -s $BASE/ledger/providers/
+{"default": "quickbooks", "providers": [{"name": "quickbooks", "connected": false}, {"name": "xero", "connected": false}]}
+
+$ # Reading before connecting is refused, and makes no outbound call at all.
+
+$ curl -s -w "\n<- HTTP %{http_code}\n" $BASE/ledger/quickbooks/bills/
+{"error": "LedgerAuthError", "detail": "quickbooks: client is not connected. Complete the OAuth callback, or construct the client with a stored token."}
+<- HTTP 401
+
+$ # Step 1 of the OAuth round trip. Note the CSRF `state`, which the
+
+$ # original implementation never sent.
+
+$ curl -s -o /dev/null -D - -c cookies.txt $BASE/initiate_ledger_process/
+HTTP/1.1 302 Found
+Location: https://appcenter.intuit.com/connect/oauth2?client_id=demo-client-id&response_type=code&scope=com.intuit.quickbooks.accounting&redirect_uri=http%3A%2F%2F127.0.0.1%3A8870%2Faccounts%2Fquickbooks%2Flogin%2Fcallback%2F&state=nw60wpHIXIojn2mM7UQWczSKa98MG7G0
+Set-Cookie:  sessionid=<redacted>; expires=Fri, 09 Oct 2026 19:21:06 GMT; HttpOnly; Max-Age=1209600; Path=/; SameSite=Lax
+
+$ # Step 2: the provider redirects back with the code and that same state.
+
+$ curl -s -b cookies.txt -c cookies.txt "$BASE/accounts/quickbooks/login/callback/?code=demo-auth-code&state=nw60wpHIXIojn2mM7UQWczSKa98MG7G0&realmId=4620816365361496080"
+{
+    "provider": "quickbooks",
+    "connected": true,
+    "bills": {
+        "items": [
+            {
+                "provider": "quickbooks",
+                "id": "141",
+                "vendor_id": "56",
+                "vendor_name": "Norton Lumber and Building Materials",
+                "total": "1500.00",
+                "balance": "1500.00",
+                "currency": "USD",
+                "document_number": "BILL-0141",
+                "issued_on": "2024-03-01",
+                "due_on": "2024-03-31",
+                "is_paid": false
+            },
+            {
+                "provider": "quickbooks",
+                "id": "142",
+                "vendor_id": "57",
+                "vendor_name": "Hicks Hardware",
+                "total": "275.50",
+                "balance": "0.00",
+                "currency": "USD",
+                "document_number": "BILL-0142",
+                "issued_on": "2024-03-02",
+                "due_on": "2024-04-01",
+                "is_paid": true
+            },
+            {
+                "provider": "quickbooks",
+                "id": "143",
+                "vendor_id": "58",
+                "vendor_name": "Tania's Nursery",
+                "total": "89.99",
+                "balance": "89.99",
+                "currency": "USD",
+                "document_number": "BILL-0143",
+                "issued_on": "2024-03-03",
+                "due_on": "2024-04-02",
+                "is_paid": false
+            },
+            {
+                "provider": "quickbooks",
+                "id": "144",
+                "vendor_id": "59",
+                "vendor_name": "Ellis Equipment Rental",
+                "total": "4310.40",
+                "balance": "4310.40",
+                "currency": "USD",
+                "document_number": "BILL-0144",
+                "issued_on": "2024-03-04",
+                "due_on": "2024-04-03",
+                "is_paid": false
+            },
+            {
+                "provider": "quickbooks",
+                "id": "145",
+                "vendor_id": "56",
+                "vendor_name": "Norton Lumber and Building Materials",
+                "total": "620.00",
+                "balance": "120.00",
+                "currency": "USD",
+                "document_number": "BILL-0145",
+                "issued_on": "2024-03-05",
+                "due_on": "2024-04-04",
+                "is_paid": false
+            },
+            {
+                "provider": "quickbooks",
+                "id": "146",
+                "vendor_id": "57",
+                "vendor_name": "Hicks Hardware",
+                "total": "42.00",
+                "balance": "42.00",
+                "currency": "USD",
+                "document_number": "BILL-0146",
+                "issued_on": "2024-03-06",
+                "due_on": "2024-04-05",
+                "is_paid": false
+            },
+            {
+                "provider": "quickbooks",
+                "id": "147",
+                "vendor_id": "56",
+                "vendor_name": "Norton Lumber and Building Materials",
+                "total": "1234.56",
+                "balance": "234.56",
+                "currency": "USD",
+                "document_number": "BILL-0147",
+                "issued_on": "2024-03-07",
+                "due_on": "2024-04-06",
+                "is_paid": false
+            }
+        ],
+        "offset": 0,
+        "limit": 50,
+        "next_offset": null,
+        "has_more": false
+    },
+    "vendors": {
+        "items": [
+            {
+                "provider": "quickbooks",
+                "id": "56",
+                "name": "Norton Lumber and Building Materials",
+                "balance": "8975.25",
+                "currency": "USD",
+                "email": "ap@nortonlumber.example",
+                "active": true
+            },
+            {
+                "provider": "quickbooks",
+                "id": "57",
+                "name": "Hicks Hardware",
+                "balance": "1200.00",
+                "currency": "USD",
+                "email": "billing@hickshardware.example",
+                "active": true
+            },
+            {
+                "provider": "quickbooks",
+                "id": "58",
+                "name": "Tania's Nursery",
+                "balance": "0.00",
+                "currency": "USD",
+                "email": "",
+                "active": true
+            },
+            {
+                "provider": "quickbooks",
+                "id": "59",
+                "name": "Ellis Equipment Rental",
+                "balance": "4310.40",
+                "currency": "USD",
+                "email": "",
+                "active": false
+            }
+        ],
+        "offset": 0,
+        "limit": 50,
+        "next_offset": null,
+        "has_more": false
+    }
+}
+
+$ # The state is single use: replaying the same callback now fails.
+
+$ curl -s -w "\n<- HTTP %{http_code}\n" -b cookies.txt "$BASE/accounts/quickbooks/login/callback/?code=demo-auth-code&state=<same state>"
+{"error": "LedgerAuthError", "detail": "quickbooks: OAuth state mismatch; the callback did not come from the authorization request this session started"}
+<- HTTP 401
+
+$ # Paging: three bills at a time, with the cursor for the next page.
+
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?limit=3"
+{
+    "items": [
+        {
+            "provider": "quickbooks",
+            "id": "141",
+            "vendor_id": "56",
+            "vendor_name": "Norton Lumber and Building Materials",
+            "total": "1500.00",
+            "balance": "1500.00",
+            "currency": "USD",
+            "document_number": "BILL-0141",
+            "issued_on": "2024-03-01",
+            "due_on": "2024-03-31",
+            "is_paid": false
+        },
+        {
+            "provider": "quickbooks",
+            "id": "142",
+            "vendor_id": "57",
+            "vendor_name": "Hicks Hardware",
+            "total": "275.50",
+            "balance": "0.00",
+            "currency": "USD",
+            "document_number": "BILL-0142",
+            "issued_on": "2024-03-02",
+            "due_on": "2024-04-01",
+            "is_paid": true
+        },
+        {
+            "provider": "quickbooks",
+            "id": "143",
+            "vendor_id": "58",
+            "vendor_name": "Tania's Nursery",
+            "total": "89.99",
+            "balance": "89.99",
+            "currency": "USD",
+            "document_number": "BILL-0143",
+            "issued_on": "2024-03-03",
+            "due_on": "2024-04-02",
+            "is_paid": false
+        }
+    ],
+    "offset": 0,
+    "limit": 3,
+    "next_offset": 3,
+    "has_more": true
+}
+
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?limit=3&offset=3"
+{
+    "items": [
+        {
+            "provider": "quickbooks",
+            "id": "144",
+            "vendor_id": "59",
+            "vendor_name": "Ellis Equipment Rental",
+            "total": "4310.40",
+            "balance": "4310.40",
+            "currency": "USD",
+            "document_number": "BILL-0144",
+            "issued_on": "2024-03-04",
+            "due_on": "2024-04-03",
+            "is_paid": false
+        },
+        {
+            "provider": "quickbooks",
+            "id": "145",
+            "vendor_id": "56",
+            "vendor_name": "Norton Lumber and Building Materials",
+            "total": "620.00",
+            "balance": "120.00",
+            "currency": "USD",
+            "document_number": "BILL-0145",
+            "issued_on": "2024-03-05",
+            "due_on": "2024-04-04",
+            "is_paid": false
+        },
+        {
+            "provider": "quickbooks",
+            "id": "146",
+            "vendor_id": "57",
+            "vendor_name": "Hicks Hardware",
+            "total": "42.00",
+            "balance": "42.00",
+            "currency": "USD",
+            "document_number": "BILL-0146",
+            "issued_on": "2024-03-06",
+            "due_on": "2024-04-05",
+            "is_paid": false
+        }
+    ],
+    "offset": 3,
+    "limit": 3,
+    "next_offset": 6,
+    "has_more": true
+}
+
+$ # Filtering by vendor - the argument the original get_bills() ignored.
+
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/?vendor_id=56"
+{
+    "items": [
+        {
+            "provider": "quickbooks",
+            "id": "141",
+            "vendor_id": "56",
+            "vendor_name": "Norton Lumber and Building Materials",
+            "total": "1500.00",
+            "balance": "1500.00",
+            "currency": "USD",
+            "document_number": "BILL-0141",
+            "issued_on": "2024-03-01",
+            "due_on": "2024-03-31",
+            "is_paid": false
+        },
+        {
+            "provider": "quickbooks",
+            "id": "145",
+            "vendor_id": "56",
+            "vendor_name": "Norton Lumber and Building Materials",
+            "total": "620.00",
+            "balance": "120.00",
+            "currency": "USD",
+            "document_number": "BILL-0145",
+            "issued_on": "2024-03-05",
+            "due_on": "2024-04-04",
+            "is_paid": false
+        },
+        {
+            "provider": "quickbooks",
+            "id": "147",
+            "vendor_id": "56",
+            "vendor_name": "Norton Lumber and Building Materials",
+            "total": "1234.56",
+            "balance": "234.56",
+            "currency": "USD",
+            "document_number": "BILL-0147",
+            "issued_on": "2024-03-07",
+            "due_on": "2024-04-06",
+            "is_paid": false
+        }
+    ],
+    "offset": 0,
+    "limit": 50,
+    "next_offset": null,
+    "has_more": false
+}
+
+$ # A single bill by id - the argument the original get_bill() ignored.
+
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/bills/147/"
+{
+    "provider": "quickbooks",
+    "id": "147",
+    "vendor_id": "56",
+    "vendor_name": "Norton Lumber and Building Materials",
+    "total": "1234.56",
+    "balance": "234.56",
+    "currency": "USD",
+    "document_number": "BILL-0147",
+    "issued_on": "2024-03-07",
+    "due_on": "2024-04-06",
+    "is_paid": false
+}
+
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/vendors/?limit=2"
+{
+    "items": [
+        {
+            "provider": "quickbooks",
+            "id": "56",
+            "name": "Norton Lumber and Building Materials",
+            "balance": "8975.25",
+            "currency": "USD",
+            "email": "ap@nortonlumber.example",
+            "active": true
+        },
+        {
+            "provider": "quickbooks",
+            "id": "57",
+            "name": "Hicks Hardware",
+            "balance": "1200.00",
+            "currency": "USD",
+            "email": "billing@hickshardware.example",
+            "active": true
+        }
+    ],
+    "offset": 0,
+    "limit": 2,
+    "next_offset": 2,
+    "has_more": true
+}
+
+$ curl -s -b cookies.txt "$BASE/ledger/quickbooks/vendors/59/"
+{
+    "provider": "quickbooks",
+    "id": "59",
+    "name": "Ellis Equipment Rental",
+    "balance": "4310.40",
+    "currency": "USD",
+    "email": "",
+    "active": false
+}
+
+$ # An id that does not exist maps to 404, not to a 500.
+
+$ curl -s -w "\n<- HTTP %{http_code}\n" -b cookies.txt "$BASE/ledger/quickbooks/bills/999/"
+{"error": "LedgerNotFound", "detail": "quickbooks get_bill(999): not found"}
+<- HTTP 404
+
+$ # An unknown provider is a 404 that names the ones that exist.
+
+$ curl -s -w "\n<- HTTP %{http_code}\n" -b cookies.txt "$BASE/ledger/sage/bills/"
+{"error": "UnknownProviderError", "detail": "ledger provider 'sage' is not configured; configured providers: quickbooks, xero"}
+<- HTTP 404
+
+$ # Xero is registered, but this session never connected it.
+
+$ curl -s -w "\n<- HTTP %{http_code}\n" -b cookies.txt "$BASE/ledger/xero/bills/"
+{"error": "LedgerAuthError", "detail": "xero: client is not connected. Complete the OAuth callback, or construct the client with a stored token."}
+<- HTTP 401
+
+$ curl -s -b cookies.txt $BASE/ledger/providers/
+{
+    "default": "quickbooks",
+    "providers": [
+        {
+            "name": "quickbooks",
+            "connected": true
+        },
+        {
+            "name": "xero",
+            "connected": false
+        }
+    ]
+}
