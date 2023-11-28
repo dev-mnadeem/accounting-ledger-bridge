@@ -70,12 +70,14 @@ class LedgerService:
 
     def client(self, provider: str) -> LedgerClientBase:
         """Build a client, armed with a stored token when one exists."""
-        return build_client(
+        client = build_client(
             provider,
             provider_config(provider),
             transport=self.transport,
             token=self.store.get(provider),
         )
+        client.on_token_refresh = lambda token: self.store.set(provider, token)
+        return client
 
     def start_authorization(self, provider: str) -> str:
         """Return the consent URL and remember the CSRF state."""

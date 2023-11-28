@@ -73,7 +73,7 @@ sequenceDiagram
     opt token within 60s of expiry
         C->>P: POST token_url grant_type=refresh_token
         P-->>C: replacement access token
-        Note over C,K: used for this request only<br/>never written back to the session
+        Note over C,K: persisted to the server-side session<br/>before the API request proceeds
     end
     C->>P: GET Invoices?page=2&pageSize=3
     V-->>B: 200 JSON with next_offset=6
@@ -151,7 +151,7 @@ this tree, rotate it in the provider's portal; scrubbing a file does not un-disc
 
 ## Tests, and what that actually proves
 
-`DJANGO_DEBUG=true python manage.py test` reports **131 tests, 0 failures** (confirmed on
+`DJANGO_DEBUG=true python manage.py test` reports **133 tests, 0 failures** (confirmed on
 Python 3.12), `ruff check` is clean, and line coverage is 94% of 730 statements. The suite runs
 with sockets blocked: `NoNetworkMixin` swaps
 `socket.socket.connect` for a stub that fails the test, and providers are driven through a
@@ -163,8 +163,8 @@ Captured runs: [`test-run.txt`](docs/transcripts/test-run.txt) (suite and lint, 
 [`deploy-check.txt`](docs/transcripts/deploy-check.txt) (`check --deploy`, plus the no-key boot
 failure).
 
-There is no vendor SDK in `requirements.txt` — four runtime packages, and the comment there
-explains why: `python-quickbooks` pins `intuit-oauth==1.2.4`, which reaches the `imp` module
+Runtime dependency ranges live in `requirements.in`; `requirements.txt` locks Django 5.2 LTS
+and its resolved dependencies. There is no vendor SDK: `python-quickbooks` pins `intuit-oauth==1.2.4`, which reaches the `imp` module
 Python 3.12 removed.
 
 ## Adding a third ledger
@@ -186,12 +186,11 @@ network policy lives: one pooled session per process, a 15-second timeout, up to
 
 ## Known gaps
 
-- **Tokens live in the browser session.** Django signs the session cookie but does not encrypt it,
-  so a refresh token travels with the user. `TokenStore` is a protocol so a database-backed store
-  is one class — that class has not been written.
-- **A lazily refreshed token is not persisted.** `LedgerService.client()` rebuilds a client per
-  call from the stored token and `store.set()` runs only in `complete_authorization()`, so a
-  refresh during a read serves that one request and is discarded.
+- **Tokens use server-side database sessions.** The browser holds a session ID. Protect the
+  session database and set secure cookies before deployment; signed-cookie sessions are unsuitable
+  for OAuth refresh tokens. Rotated tokens are saved before the next provider read, including
+  when that read subsequently fails. Concurrent refreshes across workers still need a shared
+  per-connection lock in a production token store.
 - **No authentication on the service itself.** Anyone who can reach it can start an OAuth flow.
 - **Xero has never run against the live API.** Written to the published Accounting API 2.0
   contract and unit-tested against recorded shapes, but no Xero credentials were available end to
@@ -199,3 +198,7 @@ network policy lives: one pooled session per process, a 15-second timeout, up to
 - **No caching and no background sync.** Every read is a live provider call, so paging 20,000 bills
   is 200 round trips. `iter_bills()` / `iter_vendors()` stream a collection behind a 100-page
   circuit breaker, but a deployment wants a task queue.
+
+## Author
+
+[**Muhammad Nadeem**](https://github.com/dev-mnadeem)

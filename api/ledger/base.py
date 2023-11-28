@@ -1,22 +1,15 @@
-"""The contract every accounting-ledger provider implements.
+"""Provider-neutral reads and OAuth connection lifecycle.
 
-The four read operations and their signatures are inherited verbatim from the
-original ``LedgerClientBase`` skeleton this project started from, so the
-contract a reviewer was given is the contract that is honoured. What changed is
-that the arguments are now *used*: ``num`` bounds the page, ``vendor_id``
-filters, and ``bill_id``/``vendor_id`` select the record. The originals
-accepted those arguments and ignored every one of them.
-
-Methods return values rather than mutating instance attributes, which makes a
-client safe to reuse across requests and makes every result independently
-assertable in a test.
+Each request gets a client with its stored token and an optional refresh
+persistence callback. Providers implement the four read operations; pagination
+and token expiry handling stay shared.
 """
 
 from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import replace
 
 from .domain import Bill, Page, Vendor
@@ -61,6 +54,7 @@ class LedgerClientBase(ABC):
         self.credentials = credentials
         self.transport = transport
         self._token = token
+        self.on_token_refresh: Callable[[TokenSet], None] | None = None
         oauth_config = self.oauth_config()
         if token_url:
             # Development/demo and egress-proxy seam; see the README config table.
@@ -108,7 +102,10 @@ class LedgerClientBase(ABC):
             )
         if self._token.is_expired():
             logger.info("%s: access token expired, refreshing", self.name)
-            self._token = self._flow.refresh(self._token)
+            refreshed = self._flow.refresh(self._token)
+            if self.on_token_refresh is not None:
+                self.on_token_refresh(refreshed)
+            self._token = refreshed
         return self._token
 
     @property

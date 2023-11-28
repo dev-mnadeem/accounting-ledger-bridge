@@ -4,11 +4,11 @@ The original code kept the authorization *code* in the session and rebuilt an
 un-authenticated client on every request, so a connection never survived the
 callback. Tokens now go through this small interface instead.
 
-The shipped implementation is session-backed, which is right for a single-user
-demo and wrong for production: Django's default session store signs the cookie
-but does not encrypt it, so a refresh token would travel in the user's browser.
-Swapping in a database- or KMS-backed store means implementing
-:class:`TokenStore` and pointing ``LedgerService`` at it — no other file moves.
+The shipped implementation uses Django's database-backed session engine: the
+browser carries a session ID, while tokens remain in the session table. Protect
+that database and use secure cookies in production. Do not switch to signed-cookie
+sessions, which would expose token contents to the browser. A dedicated encrypted
+store can implement TokenStore without changing the ledger clients.
 """
 
 from __future__ import annotations
